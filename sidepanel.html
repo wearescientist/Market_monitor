@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Monitor Side Panel</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Side panel specific overrides */
+        body {
+            width: 100%;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Crypto Monitor</h1>
+            <div class="header-controls">
+                <button id="refresh-btn" aria-label="Refresh Prices" title="Refresh Now">🔄</button>
+                <button id="settings-btn" aria-label="Settings">⚙️</button>
+            </div>
+        </header>
+
+        <div id="settings-panel" class="hidden">
+            <!-- API Provider Management -->
+            <div class="form-group">
+                <label>API Providers</label>
+                <div class="api-provider-list" id="api-provider-list">
+                    <!-- API providers will be dynamically inserted here -->
+                </div>
+            </div>
+
+            <!-- API Configuration Form -->
+            <div id="api-config-section" class="hidden">
+                <h3 id="api-config-title">Configure API</h3>
+                <div class="form-group">
+                    <label for="api-name">API Name</label>
+                    <input type="text" id="api-name" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="api-url">API Base URL</label>
+                    <input type="text" id="api-url">
+                </div>
+                <div class="form-group">
+                    <label for="config-api-key">API Key</label>
+                    <input type="text" id="config-api-key" placeholder="Optional">
+                </div>
+                <div class="form-group">
+                    <label for="config-secret-key">Secret Key</label>
+                    <input type="password" id="config-secret-key" placeholder="Optional">
+                </div>
+                <div class="form-group bitget-only hidden">
+                    <label for="config-passphrase">Passphrase</label>
+                    <input type="password" id="config-passphrase" placeholder="Required for Bitget">
+                </div>
+                <button id="save-api-config" class="secondary-btn">Save API Configuration</button>
+            </div>
+
+            <!-- General Settings -->
+            <div class="form-group">
+                <label for="refresh-interval">Refresh Interval (seconds)</label>
+                <div style="display: flex; gap: 8px;">
+                    <input type="number" id="refresh-interval" min="5" value="10">
+                    <button id="save-interval-btn" style="width: auto; padding: 0 12px;">Save</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <button id="test-sound-btn" class="secondary-btn">Test Alert Sound 🔔</button>
+            </div>
+        </div>
+
+        <div class="add-token-section">
+            <select id="api-selector">
+                <option value="">Select API</option>
+                <!-- Options will be dynamically populated -->
+            </select>
+            <input type="text" id="token-symbol" placeholder="Symbol (e.g., BTC)" uppercase>
+            <input type="number" id="alert-price" placeholder="Alert Price">
+            <button id="add-token">Add</button>
+        </div>
+
+        <ul id="token-list">
+            <!-- Tokens will be added here dynamically -->
+        </ul>
+    </div>
+    <script src="popup.js"></script>
+</body>
+
+</html>

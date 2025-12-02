@@ -1,0 +1,38 @@
+{
+  "manifest_version": 3,
+  "name": "Crypto Market Monitor",
+  "version": "1.0",
+  "description": "Monitor cryptocurrency prices and set alerts.",
+  "permissions": [
+    "storage",
+    "alarms",
+    "notifications",
+    "sidePanel",
+    "offscreen"
+  ],
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "host_permissions": [
+    "https://api.binance.com/*",
+    "https://api.coingecko.com/*",
+    "https://pro-api.coinmarketcap.com/*",
+    "https://*/*"
+  ],
+  "action": {
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
