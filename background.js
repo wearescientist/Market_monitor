@@ -15,6 +15,14 @@ const DEFAULT_API_CONFIGS = {
         secretKey: '',
         baseUrl: 'https://api.binance.com/api/v3'
     },
+    binanceFutures: {
+        type: 'binanceFutures',
+        name: 'Binance Futures',
+        enabled: true,
+        apiKey: '',
+        secretKey: '',
+        baseUrl: 'https://fapi.binance.com/fapi/v1'
+    },
     coingecko: {
         type: 'coingecko',
         name: 'CoinGecko',

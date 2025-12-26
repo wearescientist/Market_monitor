@@ -110,6 +110,12 @@ document.addEventListener('DOMContentLoaded', () => {
       apiProviderList.appendChild(item);
     }
 
+    // Render Binance Futures
+    if (apiConfigs.binanceFutures) {
+      const item = createAPIProviderItem('binanceFutures', apiConfigs.binanceFutures);
+      apiProviderList.appendChild(item);
+    }
+
     // Render CoinGecko
     if (apiConfigs.coingecko) {
       const item = createAPIProviderItem('coingecko', apiConfigs.coingecko);
@@ -128,7 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function createAPIProviderItem(apiId, apiConfig) {
     const div = document.createElement('div');
     div.className = 'api-provider-item';
-    if (apiConfig.enabled && (apiConfig.apiKey || apiId === 'binance')) {
+    if (apiConfig.enabled && (apiConfig.apiKey || apiId === 'binance' || apiId === 'binanceFutures')) {
       div.classList.add('configured');
     }
 
@@ -138,7 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const statusSpan = document.createElement('span');
     statusSpan.className = 'provider-status';
-    if (apiConfig.enabled && (apiConfig.apiKey || apiId === 'binance')) {
+    if (apiConfig.enabled && (apiConfig.apiKey || apiId === 'binance' || apiId === 'binanceFutures')) {
       statusSpan.textContent = '✓';
     }
 
@@ -159,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     apiNameInput.value = apiConfig.name || '';
     apiUrlInput.value = apiConfig.baseUrl || '';
-    apiUrlInput.readOnly = (apiId === 'binance' || apiId === 'coingecko' || apiId === 'coinmarketcap');
+    apiUrlInput.readOnly = (apiId === 'binance' || apiId === 'binanceFutures' || apiId === 'coingecko' || apiId === 'coinmarketcap');
 
     configApiKeyInput.value = apiConfig.apiKey || '';
     configSecretKeyInput.value = apiConfig.secretKey || '';
@@ -193,8 +199,8 @@ document.addEventListener('DOMContentLoaded', () => {
         apiConfigs[currentApiId].passphrase = configPassphraseInput.value.trim();
       }
 
-      // Enable if API key is provided (or if it's Binance which works without key)
-      apiConfigs[currentApiId].enabled = !!(apiConfigs[currentApiId].apiKey || currentApiId === 'binance');
+      // Enable if API key is provided (or if it's Binance/Binance Futures which works without key)
+      apiConfigs[currentApiId].enabled = !!(apiConfigs[currentApiId].apiKey || currentApiId === 'binance' || currentApiId === 'binanceFutures');
 
       chrome.storage.local.set({ apiConfigs }, () => {
         loadAPIProviders();
@@ -330,6 +336,35 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Smart price formatting: at least 6 significant digits for small prices
+  function formatPrice(price) {
+    if (price === null || price === undefined || isNaN(price)) {
+      return 'Loading...';
+    }
+
+    const absPrice = Math.abs(price);
+
+    // For prices >= 10000, use 2 decimal places (e.g., 85764.34)
+    if (absPrice >= 10000) {
+      return `$${price.toFixed(2)}`;
+    }
+
+    // For prices >= 1000, also use 2 decimal places (e.g., 1234.56)
+    if (absPrice >= 1000) {
+      return `$${price.toFixed(2)}`;
+    }
+
+    // For smaller prices, show at least 6 significant digits
+    // Count integer digits (digits before decimal point)
+    const integerPart = Math.floor(absPrice);
+    const integerDigits = integerPart === 0 ? 1 : Math.floor(Math.log10(integerPart)) + 1;
+
+    // Calculate how many decimal places needed for 6 total digits
+    const decimalPlaces = Math.max(2, 6 - integerDigits);
+
+    return `$${price.toFixed(decimalPlaces)}`;
+  }
+
   // Animate number change with rolling effect
   function animateNumberChange(element, oldValue, newValue, duration = 800) {
     if (oldValue === newValue) return;
@@ -345,12 +380,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const easeProgress = 1 - Math.pow(1 - progress, 3);
 
       const currentValue = oldValue + (difference * easeProgress);
-      element.textContent = `$${currentValue.toFixed(2)}`;
+      element.textContent = formatPrice(currentValue);
 
       if (progress < 1) {
         requestAnimationFrame(updateNumber);
       } else {
-        element.textContent = `$${newValue.toFixed(2)}`;
+        element.textContent = formatPrice(newValue);
       }
     }
 
@@ -661,7 +696,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // 5. Price Display & Animation
       const priceSpan = li.querySelector('.price-value');
-      const priceDisplay = currentPrice ? `$${currentPrice.toFixed(2)}` : 'Loading...';
+      const priceDisplay = currentPrice ? formatPrice(currentPrice) : 'Loading...';
 
       if (currentPrice && priceSpan.textContent !== priceDisplay) {
         const oldPriceText = priceSpan.textContent;

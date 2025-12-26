@@ -15,6 +15,8 @@ class APIHandler {
         switch (apiConfig.type) {
             case 'binance':
                 return await this.fetchBinance(apiConfig, symbol);
+            case 'binanceFutures':
+                return await this.fetchBinanceFutures(apiConfig, symbol);
             case 'coingecko':
                 return await this.fetchCoinGecko(apiConfig, symbol);
             case 'coinmarketcap':
@@ -59,6 +61,48 @@ class APIHandler {
             }
         } catch (e) {
             console.error('Error fetching Binance klines:', e);
+        }
+
+        return {
+            currentPrice,
+            priceChangePercent,
+            history
+        };
+    }
+
+    /**
+     * Fetch price from Binance Futures API
+     */
+    static async fetchBinanceFutures(config, symbol) {
+        const headers = {};
+        if (config.apiKey) {
+            headers['X-MBX-APIKEY'] = config.apiKey;
+        }
+
+        // Fetch 24hr ticker from Futures API
+        const tickerUrl = `${config.baseUrl}/ticker/24hr?symbol=${symbol}`;
+        const tickerResponse = await fetch(tickerUrl, { headers });
+
+        if (!tickerResponse.ok) {
+            throw new Error(`Binance Futures API error: ${tickerResponse.statusText}`);
+        }
+
+        const tickerData = await tickerResponse.json();
+        const currentPrice = parseFloat(tickerData.lastPrice);
+        const priceChangePercent = parseFloat(tickerData.priceChangePercent);
+
+        // Fetch K-line data from Futures API
+        let history = [];
+        try {
+            const klineUrl = `${config.baseUrl}/klines?symbol=${symbol}&interval=1h&limit=24`;
+            const klineResponse = await fetch(klineUrl);
+
+            if (klineResponse.ok) {
+                const klineData = await klineResponse.json();
+                history = klineData.map(k => parseFloat(k[4])); // Close price
+            }
+        } catch (e) {
+            console.error('Error fetching Binance Futures klines:', e);
         }
 
         return {
