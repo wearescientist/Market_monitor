@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Crypto Market Monitor",
-  "version": "1.0",
-  "description": "Monitor cryptocurrency prices and set alerts.",
+  "name": "Assets Monitor",
+  "version": "1.1",
+  "description": "Monitor asset prices (crypto, stocks, A-shares) and set alerts.",
   "permissions": [
     "storage",
     "alarms",

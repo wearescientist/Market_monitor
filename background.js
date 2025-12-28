@@ -23,6 +23,12 @@ const DEFAULT_API_CONFIGS = {
         secretKey: '',
         baseUrl: 'https://fapi.binance.com/fapi/v1'
     },
+    ashare: {
+        type: 'ashare',
+        name: 'A股 (沪深)',
+        enabled: true,
+        baseUrl: 'https://qt.gtimg.cn'
+    },
     coingecko: {
         type: 'coingecko',
         name: 'CoinGecko',
@@ -48,7 +54,7 @@ chrome.runtime.onInstalled.addListener(() => {
         let needsUpdate = false;
         const updates = {};
 
-        // Migrate old API keys to new structure if they exist
+        // Migrate old API keys to new structure or merge new API configs
         if (!result.apiConfigs) {
             updates.apiConfigs = DEFAULT_API_CONFIGS;
 
@@ -58,6 +64,23 @@ chrome.runtime.onInstalled.addListener(() => {
                 updates.apiConfigs.binance.secretKey = result.secretKey || '';
             }
             needsUpdate = true;
+        } else {
+            // Merge new API configs with existing ones (add any missing APIs)
+            let configsUpdated = false;
+            const mergedConfigs = { ...result.apiConfigs };
+
+            for (const [apiId, defaultConfig] of Object.entries(DEFAULT_API_CONFIGS)) {
+                if (!mergedConfigs[apiId]) {
+                    mergedConfigs[apiId] = defaultConfig;
+                    configsUpdated = true;
+                    console.log(`[Init] Added new API config: ${apiId}`);
+                }
+            }
+
+            if (configsUpdated) {
+                updates.apiConfigs = mergedConfigs;
+                needsUpdate = true;
+            }
         }
 
         // Set default tokens with API source
@@ -211,9 +234,9 @@ async function checkPrices() {
                 continue;
             }
 
-            // Normalize symbol (add USDT if needed)
+            // Normalize symbol (add USDT if needed for crypto, skip for A-share)
             let symbol = token.symbol;
-            if (!symbol.endsWith('USDT') && !symbol.endsWith('BTC') && !symbol.endsWith('ETH')) {
+            if (apiSource !== 'ashare' && !symbol.endsWith('USDT') && !symbol.endsWith('BTC') && !symbol.endsWith('ETH')) {
                 symbol += 'USDT';
             }
 
@@ -246,7 +269,8 @@ async function checkPrices() {
                 ...token,
                 lastPrice: currentPrice,
                 priceChangePercent: priceChangePercent,
-                history: history // Store K-line data for sparkline rendering
+                history: history, // Store K-line data for sparkline rendering
+                stockName: priceData.stockName || token.stockName // Store stock name for A-share
             });
             pricesChanged = true;
 

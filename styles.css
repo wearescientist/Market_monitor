@@ -1,233 +1,282 @@
+/* Zpix Pixel Font - 像素风格字体 */
+@font-face {
+  font-family: 'Zpix';
+  src: url('https://cdn.jsdelivr.net/gh/SolidZORO/zpix-pixel-font@master/dist/zpix.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
-  --primary-color: #3b82f6;
-  --bg-color: #ffffff;
-  --text-color: #1f2937;
-  --border-color: #e5e7eb;
-  --danger-color: #ef4444;
-  --success-color: #10b981;
+  /* Terminal / Hacker Theme Variables */
+  --bg-color: #0d1117;
+  --panel-bg: #161b22;
+  --text-main: #c9d1d9;
+  --text-dim: #8b949e;
+  --terminal-green: #00ff41;
+  --terminal-green-dim: rgba(0, 255, 65, 0.2);
+  --terminal-red: #ff0055;
+  --terminal-red-dim: rgba(255, 0, 85, 0.2);
+  --terminal-blue: #58a6ff;
+  --terminal-yellow: #f59e0b;
+  --border-color: #30363d;
+  /* Zpix 像素字体作为主字体，支持中英文 */
+  --font-pixel: 'Zpix', 'SF Mono', Menlo, Courier, monospace;
+  --font-mono: 'Zpix', 'SF Mono', 'Segoe UI Mono', 'Roboto Mono', Menlo, Courier, monospace;
+  --font-chinese: 'Zpix', 'PingFang SC', 'Heiti SC', 'Microsoft YaHei', 'SimHei', 'STHeiti', sans-serif;
 }
 
 body {
   width: 350px;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-mono);
   margin: 0;
   padding: 0;
   background-color: var(--bg-color);
-  color: var(--text-color);
+  color: var(--text-main);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Apply terminal font to ALL elements (except stock names which need Chinese font) */
+*,
+*::before,
+*::after {
+  font-family: var(--font-mono);
+}
+
+/* Override for stock names - needs Chinese font support */
+.token-symbol {
+  font-family: var(--font-chinese), var(--font-mono) !important;
 }
 
 .container {
-  padding: 16px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
+/* --- Header / Terminal Top Bar --- */
 header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed var(--border-color);
+  margin-bottom: 4px;
 }
 
 h1 {
-  font-size: 1.25rem;
-  font-weight: 600;
+  font-size: 1rem;
+  font-weight: 700;
   margin: 0;
+  color: var(--terminal-green);
+  text-shadow: 0 0 5px var(--terminal-green-dim);
+  letter-spacing: -0.5px;
 }
 
-button {
-  cursor: pointer;
-  border: none;
-  background: none;
-  font-size: 1rem;
+h1::before {
+  content: "~/market-monitor";
+}
+
+/* Hide original text visually but keep for a11y if needed, or just replace via CSS if content allows. 
+   Actually, the HTML has "Crypto Monitor". We can "hack" it or just style it. 
+   Let's just style the text itself for now, keeping it simpler. 
+   I will use the ::before to add the path look and hide the original text if I want, 
+   but let's just make "Crypto Monitor" look cool.
+*/
+h1 {
+  /* Resetting the content hack to be safer and just style the text */
+  content: normal;
+}
+
+h1::before {
+  content: none;
+}
+
+/* Reset */
+
+/* Let's actually change the H1 to look like a prompt path in the HTML or just style it here */
+h1 {
+  font-family: var(--font-mono);
+}
+
+h1::after {
+  content: "_";
+  animation: blink 1s step-end infinite;
+  margin-left: 5px;
+  color: var(--terminal-green);
+}
+
+@keyframes blink {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0;
+  }
 }
 
 .header-controls {
   display: flex;
-  gap: 8px;
+  gap: 10px;
+}
+
+button {
+  cursor: pointer;
+  border: 1px solid var(--border-color);
+  background: var(--panel-bg);
+  color: var(--text-main);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+button:hover {
+  border-color: var(--terminal-green);
+  color: var(--terminal-green);
+  box-shadow: 0 0 8px var(--terminal-green-dim);
 }
 
 #settings-btn,
 #refresh-btn {
-  color: var(--text-color);
-  opacity: 0.7;
-  transition: opacity 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  width: 24px;
-  height: 24px;
+  /* Simplify icons to text if possible, or keep icons but style them */
+  width: 28px;
+  height: 28px;
+  font-size: 14px;
 }
 
-#settings-btn:hover,
-#refresh-btn:hover {
-  opacity: 1;
-}
-
+/* --- Settings Panel --- */
 .hidden {
   display: none;
 }
 
 #settings-panel {
-  background: #ffffff;
+  background: var(--panel-bg);
+  border: 1px solid var(--border-color);
   padding: 12px;
-  border-radius: 8px;
-  margin-bottom: 16px;
+  border-radius: 4px;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
 .form-group {
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
 label {
   display: block;
-  font-size: 0.875rem;
+  font-size: 0.75rem;
+  color: var(--text-dim);
   margin-bottom: 4px;
+  text-transform: uppercase;
 }
 
 input[type="text"],
-input[type="number"] {
+input[type="number"],
+input[type="password"],
+select {
   width: 100%;
   padding: 8px;
+  background-color: var(--bg-color);
   border: 1px solid var(--border-color);
-  border-radius: 6px;
+  color: var(--terminal-green);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  border-radius: 2px;
   box-sizing: border-box;
-  font-size: 0.875rem;
 }
 
+input:focus,
+select:focus {
+  outline: none;
+  border-color: var(--terminal-green);
+  box-shadow: 0 0 5px var(--terminal-green-dim);
+}
+
+/* --- Add Token Section (Prompt) --- */
 .add-token-section {
   display: grid;
-  grid-template-columns: 95px 1fr 80px 45px;
-  gap: 6px;
-  margin-bottom: 16px;
+  grid-template-columns: 100px 1fr 60px;
+  /* API selector | Symbol input | Add button */
+  gap: 8px;
+  align-items: center;
+  padding: 10px;
+  background: var(--panel-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+}
+
+/* Uniform height for all form elements */
+.add-token-section select,
+.add-token-section input,
+.add-token-section button {
+  height: 32px;
+  box-sizing: border-box;
 }
 
 #api-selector {
-  padding: 6px;
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  font-size: 0.65rem;
-  background: white;
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  height: 32px;
 }
 
 #token-symbol {
-  flex: 1;
   text-transform: uppercase;
-  font-size: 0.65rem;
-  padding: 6px;
-}
-
-#alert-price {
-  width: 80px;
-  font-size: 0.65rem;
-  padding: 6px;
-}
-
-/* API Provider Styles */
-.api-provider-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.api-provider-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 10px;
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s;
-  background: white;
-}
-
-.api-provider-item:hover {
-  background-color: #f9fafb;
-  border-color: var(--primary-color);
-}
-
-.api-provider-item.configured {
-  border-color: var(--success-color);
-  background-color: #f0fdf4;
-}
-
-.api-provider-item.selected {
-  background-color: #eff6ff;
-  border-color: var(--primary-color);
-}
-
-.provider-name {
-  font-weight: 500;
-  font-size: 0.875rem;
-}
-
-.provider-status {
-  color: var(--success-color);
   font-weight: bold;
-  font-size: 1rem;
-  margin-left: 8px;
 }
 
-#api-config-section {
-  margin-top: 12px;
-  padding: 12px;
-  background: #f9fafb;
-  border-radius: 6px;
-  border: 1px solid var(--border-color);
+#add-token {
+  background: transparent;
+  border: 1px solid var(--terminal-green);
+  color: var(--terminal-green);
+  font-weight: bold;
 }
 
-#api-config-section h3 {
-  margin: 0 0 12px 0;
-  font-size: 0.95rem;
-  font-weight: 600;
+#add-token:hover {
+  background: var(--terminal-green);
+  color: black;
 }
 
-.bitget-only {
-  display: none;
-}
-
-.bitget-only.visible {
-  display: block;
-}
-
-#add-token,
-#save-settings,
-#save-api-config,
-#save-interval-btn {
-  background-color: var(--primary-color);
-  color: white;
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-weight: 500;
-  font-size: 0.875rem;
-}
-
-#add-token:hover,
-#save-settings:hover {
-  background-color: #2563eb;
-}
-
+/* --- Token List --- */
 #token-list {
   list-style: none;
   padding: 0;
   margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .token-item {
   display: grid;
-  grid-template-columns: 85px 1fr 30px;
+  grid-template-columns: 130px 1fr 24px;
+  /* Symbol (wider for A-share names like 贵州茅台[600519]) | Price/Info | Del */
   align-items: center;
-  gap: 8px;
-  padding: 8px 5px;
+  padding: 8px 12px;
+  background: var(--panel-bg);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
-  margin-bottom: 8px;
-  background: white;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  /* Green left border */
+  border-left: 3px solid var(--terminal-blue);
+  border-radius: 2px;
   position: relative;
-  min-height: 65px;
+  min-height: 50px;
 }
 
+.token-item:hover {
+  border-color: var(--text-dim);
+  border-left-color: var(--terminal-green);
+}
+
+/* Chart Canvas - keep strictly behind */
 .token-chart {
   position: absolute;
   bottom: 0;
@@ -235,293 +284,265 @@ input[type="number"] {
   width: 100%;
   height: 100%;
   z-index: 0;
-  opacity: 0.25;
+  opacity: 0.1;
+  /* Lower opacity for subtle effect */
   pointer-events: none;
-  /* Add fade-in/fade-out gradient mask */
-  mask-image: linear-gradient(to right,
-      transparent 0%,
-      black 10%,
-      black 90%,
-      transparent 100%);
-  -webkit-mask-image: linear-gradient(to right,
-      transparent 0%,
-      black 10%,
-      black 90%,
-      transparent 100%);
+  mix-blend-mode: screen;
+  /* specific for dark mode */
 }
 
 .token-info {
-  position: relative;
-  z-index: 1;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
   justify-content: center;
-  gap: 4px;
-  padding: 8px 2px 4px 6px;
-  height: 100%;
+  z-index: 1;
 }
 
 .token-symbol {
-  font-weight: 600;
-  font-size: 1rem;
-  letter-spacing: 0;
-  color: var(--text-color);
-  text-align: left;
-  word-break: break-word;
-  overflow-wrap: break-word;
-  line-height: 1.2;
-  max-width: 85px;
-  overflow: hidden;
-  padding: 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--terminal-blue);
+  letter-spacing: 0.3px;
+  /* Use Chinese font for A-share stock names */
+  font-family: var(--font-chinese), var(--font-mono);
+  /* Keep stock name and code on same line, always show full text */
+  white-space: nowrap;
+  overflow: visible;
 }
 
-/* Aggressive responsive font-size based on symbol length */
+/* Dynamic font sizes handling from JS */
 .token-symbol[data-length="medium"] {
-  font-size: 0.85rem;
+  font-size: 0.9rem;
 }
 
 .token-symbol[data-length="long"] {
-  font-size: 0.7rem;
-  line-height: 1.1;
+  font-size: 0.75rem;
 }
 
 .token-symbol[data-length="very-long"] {
-  font-size: 0.58rem;
-  line-height: 1.05;
+  font-size: 0.65rem;
 }
 
 .token-symbol[data-length="extreme"] {
-  font-size: 0.52rem;
-  line-height: 1;
+  font-size: 0.55rem;
 }
 
 .token-alert {
-  font-size: 0.65rem;
-  color: #f59e0b;
+  font-size: 0.7rem;
+  color: var(--terminal-yellow);
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  white-space: nowrap;
-  min-width: 90px;
+  align-items: flex-start;
+  gap: 2px;
 }
 
 .alert-row {
+  /* Make the entire row clickable */
+  cursor: pointer;
   display: flex;
   align-items: center;
   gap: 4px;
+  width: 100%;
 }
 
-.alert-input {
-  width: 45px;
-  min-width: 45px;
-  max-width: 45px;
-  height: 18px;
-  padding: 0.8px 4px;
-  font-size: 0.6rem;
-  font-weight: 500;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  background: white;
-  color: var(--text-color);
-  transition: all 0.2s;
-  text-align: center;
-  font-family: inherit;
-  line-height: 1.2;
-  box-sizing: border-box;
-  vertical-align: middle;
-  display: none;
-}
-
+.alert-input,
 .alert-display {
-  width: 45px;
-  min-width: 45px;
-  max-width: 45px;
-  height: 18px;
-  padding: 0.8px 4px;
-  font-size: 0.6rem;
-  font-weight: 500;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  background: white;
-  color: var(--text-color);
+  background: transparent;
+  border: 1px dashed var(--border-color);
+  color: var(--terminal-yellow);
+  font-family: var(--font-mono);
   text-align: center;
-  font-family: inherit;
-  line-height: 1.2;
+  width: 55px;
+  height: 18px;
+  padding: 1px 4px;
+  font-size: 0.6rem;
   box-sizing: border-box;
-  vertical-align: middle;
+  line-height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  transition: all 0.2s;
-  display: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  /* Ensure consistent sizing */
+  min-width: 55px;
+  max-width: 55px;
+  min-height: 18px;
+  max-height: 18px;
+  vertical-align: middle;
 }
 
-.alert-display:hover {
-  border-color: #f59e0b;
-  background: #fffbeb;
-}
-
-.alert-input:hover {
-  border-color: #f59e0b;
-  background: #fffbeb;
-}
-
-.alert-input:focus {
-  outline: none;
-  border-color: #f59e0b;
-  background: #fffbeb;
-  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.1);
-}
-
+/* Empty state placeholder styling */
 .alert-input::placeholder {
-  color: #f59e0b;
+  color: var(--text-dim);
   opacity: 0.5;
-  font-weight: 500;
+  font-size: 0.55rem;
 }
 
-/* Hide number input spinners */
+/* Hide number input spinners (up/down arrows) */
 .alert-input::-webkit-outer-spin-button,
 .alert-input::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
 
-.alert-input[type=number] {
+.alert-input[type="number"] {
   -moz-appearance: textfield;
-  appearance: textfield;
 }
 
-.alert-percent {
-  font-size: 0.55rem;
-  font-weight: 500;
-  margin-left: 2px;
+/* Hover state for both input and display */
+.alert-input:hover,
+.alert-display:hover {
+  border-color: var(--terminal-yellow);
+  box-shadow: 0 0 4px var(--terminal-green-dim);
 }
 
-.alert-icon {
-  font-size: 0.6rem;
-  margin-left: 2px;
+/* Focus state with yellow glow */
+.alert-input:focus {
+  border-color: var(--terminal-yellow);
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.3);
+  outline: none;
 }
 
+/* Ensure display shows same styling when value exists */
+.alert-display:not(:empty) {
+  border-color: var(--border-color);
+}
+
+/* Price Section */
 .token-price {
-  position: relative;
-  font-size: 0.95rem;
-  font-weight: 500;
-  color: var(--text-color);
-  width: 100%;
+  z-index: 1;
   text-align: right;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  justify-content: center;
-  gap: 3px;
-  padding: 8px 10px;
-  background: rgba(255, 255, 255, 0.8);
-  border-radius: 6px;
-  overflow: hidden;
-  z-index: 2;
+  background: transparent;
+  /* Removed white bg */
+  color: var(--text-main);
 }
 
 .price-value {
+  font-size: 1rem;
   font-weight: 600;
-  transition: color 0.3s, transform 0.3s;
-  display: inline-block;
-  /* Required for transform */
-}
-
-.price-rolling {
-  animation: numberRoll 0.6s ease-out;
-}
-
-@keyframes numberRoll {
-  0% {
-    transform: scale(1);
-  }
-
-  50% {
-    transform: scale(1.15);
-    opacity: 0.8;
-  }
-
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
 }
 
 .change-percent {
   font-size: 0.8rem;
-  font-weight: 500;
-  margin-top: 0;
-  white-space: nowrap;
+  font-weight: 400;
 }
 
 .text-green {
-  color: #10b981;
+  color: var(--terminal-green);
 }
 
 .text-red {
-  color: #ef4444;
+  color: var(--terminal-red);
 }
 
-.delete-btn {
-  position: relative;
-  z-index: 3;
-  color: var(--danger-color);
-  opacity: 0.7;
-  font-size: 0.75rem;
-  padding: 0;
-  margin: 0;
-  flex-shrink: 0;
-  line-height: 1;
-  width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  justify-self: end;
-}
-
-.delete-btn:hover {
-  opacity: 1;
-}
-
-.secondary-btn {
-  background-color: #e5e7eb;
-  color: var(--text-color);
-  width: 100%;
-}
-
-.secondary-btn:hover {
-  background-color: #d1d5db;
-}
-
-@keyframes flashGreen {
+/* Animations - Neon Flash */
+@keyframes flashGreenNeon {
   0% {
-    color: #10b981;
-    transform: scale(1.05);
+    color: #fff;
+    text-shadow: 0 0 10px var(--terminal-green);
+  }
+
+  50% {
+    color: var(--terminal-green);
+    text-shadow: none;
   }
 
   100% {
-    color: var(--text-color);
-    transform: scale(1);
+    color: var(--terminal-green);
   }
 }
 
-@keyframes flashRed {
+@keyframes flashRedNeon {
   0% {
-    color: #ef4444;
-    transform: scale(1.05);
+    color: #fff;
+    text-shadow: 0 0 10px var(--terminal-red);
+  }
+
+  50% {
+    color: var(--terminal-red);
+    text-shadow: none;
   }
 
   100% {
-    color: var(--text-color);
-    transform: scale(1);
+    color: var(--text-red);
   }
+
+  /* Falls back to class color */
 }
 
+/* Override JS standard classes with new animations */
 .price-up {
-  animation: flashGreen 3s ease-out;
+  animation: flashGreenNeon 1.5s ease-out;
+  color: var(--terminal-green);
 }
 
 .price-down {
-  animation: flashRed 3s ease-out;
+  animation: flashRedNeon 1.5s ease-out;
+  color: var(--terminal-red);
+}
+
+.delete-btn {
+  z-index: 2;
+  background: transparent;
+  border: none;
+  color: var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  margin-left: auto;
+  cursor: pointer;
+}
+
+.delete-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.delete-btn:hover {
+  color: var(--terminal-red);
+}
+
+.delete-btn:hover svg {
+  filter: drop-shadow(0 0 3px var(--terminal-red-dim));
+}
+
+/* API Provider List styling */
+.api-provider-item {
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+  color: var(--text-dim);
+  padding: 8px;
+  border-radius: 2px;
+  margin-bottom: 4px;
+}
+
+.api-provider-item.selected {
+  border-color: var(--terminal-green);
+  color: var(--terminal-green);
+  background: var(--panel-bg);
+}
+
+.api-provider-item.configured .provider-status {
+  color: var(--terminal-green);
+}
+
+.provider-status {
+  font-weight: bold;
+}
+
+/* Misc buttons */
+.secondary-btn {
+  background: var(--border-color);
+  color: var(--text-main);
+}
+
+.secondary-btn:hover {
+  background: var(--text-dim);
+  color: var(--bg-color);
 }

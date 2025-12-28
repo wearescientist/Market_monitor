@@ -21,6 +21,8 @@ class APIHandler {
                 return await this.fetchCoinGecko(apiConfig, symbol);
             case 'coinmarketcap':
                 return await this.fetchCoinMarketCap(apiConfig, symbol);
+            case 'ashare':
+                return await this.fetchAShare(apiConfig, symbol);
             case 'custom':
                 return await this.fetchCustom(apiConfig, symbol);
             default:
@@ -358,6 +360,118 @@ class APIHandler {
             currentPrice,
             priceChangePercent,
             history: Array.isArray(history) ? history : []
+        };
+    }
+
+    /**
+     * Auto-detect A-share market based on stock code
+     * @param {string} code - Stock code (e.g., 600519, 000001)
+     * @returns {string} Full code with market prefix (e.g., sh600519, sz000001)
+     */
+    static detectAShareMarket(code) {
+        // Remove any existing prefix
+        const cleanCode = code.replace(/^(sh|sz|SH|SZ)/i, '');
+
+        // A股市场识别规则：
+        // 上海(sh): 6开头(主板), 688开头(科创板), 900开头(B股)
+        // 深圳(sz): 0开头(主板), 3开头(创业板), 200开头(B股)
+        if (cleanCode.startsWith('6') || cleanCode.startsWith('9')) {
+            return `sh${cleanCode}`;
+        } else if (cleanCode.startsWith('0') || cleanCode.startsWith('3') || cleanCode.startsWith('2')) {
+            return `sz${cleanCode}`;
+        } else {
+            // 指数代码: 000开头上证指数, 399开头深证指数
+            if (cleanCode.startsWith('000')) {
+                return `sh${cleanCode}`;
+            } else if (cleanCode.startsWith('399')) {
+                return `sz${cleanCode}`;
+            }
+            // Default to Shanghai
+            return `sh${cleanCode}`;
+        }
+    }
+
+    /**
+     * Fetch price from A-Share (China Stock Market) using Tencent API
+     */
+    static async fetchAShare(config, symbol) {
+        // Auto-detect market and add prefix
+        const fullCode = this.detectAShareMarket(symbol);
+        console.log(`[A-Share] Fetching ${symbol} -> ${fullCode}`);
+
+        // Fetch real-time quote from Tencent
+        const quoteUrl = `https://qt.gtimg.cn/q=${fullCode}`;
+        const quoteResponse = await fetch(quoteUrl);
+
+        if (!quoteResponse.ok) {
+            throw new Error(`A-Share API error: ${quoteResponse.statusText}`);
+        }
+
+        // Tencent API returns GBK encoded text, need to decode properly
+        const arrayBuffer = await quoteResponse.arrayBuffer();
+        const decoder = new TextDecoder('gbk');
+        const quoteText = decoder.decode(arrayBuffer);
+        console.log(`[A-Share] Quote response:`, quoteText.substring(0, 200));
+
+        // Parse Tencent quote format
+        // Format: v_sh600519="1~贵州茅台~600519~1849.00~1857.88~1850.00~24936~..."
+        const match = quoteText.match(/v_[^=]+="([^"]+)"/);
+        if (!match || !match[1]) {
+            throw new Error(`A-Share: Invalid response for ${fullCode}`);
+        }
+
+        const parts = match[1].split('~');
+        if (parts.length < 45) {
+            throw new Error(`A-Share: Incomplete data for ${fullCode}`);
+        }
+
+        // Parse data fields
+        // [1] 股票名称, [3] 当前价, [4] 昨收, [5] 今开, [6] 成交量(手)
+        // [31] 最高, [32] 最低, [33] 涨跌额, [34] 涨跌幅
+        const stockName = parts[1];
+        const currentPrice = parseFloat(parts[3]);
+        const prevClose = parseFloat(parts[4]);
+        const priceChangePercent = parseFloat(parts[32]) ||
+            ((currentPrice - prevClose) / prevClose * 100);
+
+        console.log(`[A-Share] ${stockName} (${fullCode}): ¥${currentPrice}, ${priceChangePercent.toFixed(2)}%`);
+
+        // Fetch K-line history data
+        let history = [];
+        try {
+            // Get daily K-line data (last 30 days)
+            const klineUrl = `https://web.ifzq.gtimg.cn/appstock/app/fqkline/get?param=${fullCode},day,,,30,qfq`;
+            console.log(`[A-Share] Fetching K-line: ${klineUrl}`);
+            const klineResponse = await fetch(klineUrl);
+
+            if (klineResponse.ok) {
+                const klineData = await klineResponse.json();
+                console.log(`[A-Share] K-line response:`, JSON.stringify(klineData).substring(0, 300));
+
+                // Parse K-line data
+                // Response format: { code: 0, data: { sh600519: { qfqday: [[date, open, close, high, low, volume], ...] } } }
+                if (klineData.code === 0 && klineData.data) {
+                    const stockData = klineData.data[fullCode];
+                    if (stockData && stockData.qfqday) {
+                        // Extract close prices for sparkline
+                        history = stockData.qfqday.map(k => parseFloat(k[2])); // k[2] is close price
+                        console.log(`[A-Share] Extracted ${history.length} K-line points`);
+                    } else if (stockData && stockData.day) {
+                        // Fallback to non-adjusted data
+                        history = stockData.day.map(k => parseFloat(k[2]));
+                        console.log(`[A-Share] Extracted ${history.length} K-line points (non-adjusted)`);
+                    }
+                }
+            }
+        } catch (e) {
+            console.error(`[A-Share] Error fetching K-line for ${fullCode}:`, e);
+        }
+
+        return {
+            currentPrice,
+            priceChangePercent,
+            history,
+            stockName // Extra field for displaying stock name
         };
     }
 }

@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const tokenList = document.getElementById('token-list');
   const addTokenBtn = document.getElementById('add-token');
   const symbolInput = document.getElementById('token-symbol');
-  const alertPriceInput = document.getElementById('alert-price');
+  // Alert price input removed - alerts are now set directly on token items
   const apiSelectorInput = document.getElementById('api-selector');
   const settingsBtn = document.getElementById('settings-btn');
   const settingsPanel = document.getElementById('settings-panel');
@@ -274,7 +274,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function addToken() {
     const symbol = symbolInput.value.trim().toUpperCase();
-    const alertPrice = parseFloat(alertPriceInput.value);
     const apiSource = apiSelectorInput.value;
 
     if (!symbol) {
@@ -298,14 +297,13 @@ document.addEventListener('DOMContentLoaded', () => {
       tokens.push({
         symbol,
         apiSource,
-        alertPrice1: isNaN(alertPrice) ? null : alertPrice,
+        alertPrice1: null,
         alertPrice2: null,
         lastPrice: null
       });
 
       saveTokens(tokens);
       symbolInput.value = '';
-      alertPriceInput.value = '';
       // Keep the API selection (don't reset)
       // apiSelectorInput.value = '';
 
@@ -337,7 +335,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Smart price formatting: at least 6 significant digits for small prices
-  function formatPrice(price) {
+  function formatPrice(price, currencySymbol = '$') {
     if (price === null || price === undefined || isNaN(price)) {
       return 'Loading...';
     }
@@ -346,12 +344,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // For prices >= 10000, use 2 decimal places (e.g., 85764.34)
     if (absPrice >= 10000) {
-      return `$${price.toFixed(2)}`;
+      return `${currencySymbol}${price.toFixed(2)}`;
     }
 
     // For prices >= 1000, also use 2 decimal places (e.g., 1234.56)
     if (absPrice >= 1000) {
-      return `$${price.toFixed(2)}`;
+      return `${currencySymbol}${price.toFixed(2)}`;
     }
 
     // For smaller prices, show at least 6 significant digits
@@ -362,11 +360,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Calculate how many decimal places needed for 6 total digits
     const decimalPlaces = Math.max(2, 6 - integerDigits);
 
-    return `$${price.toFixed(decimalPlaces)}`;
+    return `${currencySymbol}${price.toFixed(decimalPlaces)}`;
   }
 
   // Animate number change with rolling effect
-  function animateNumberChange(element, oldValue, newValue, duration = 800) {
+  function animateNumberChange(element, oldValue, newValue, duration = 800, currencySymbol = '$') {
     if (oldValue === newValue) return;
 
     const startTime = performance.now();
@@ -380,12 +378,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const easeProgress = 1 - Math.pow(1 - progress, 3);
 
       const currentValue = oldValue + (difference * easeProgress);
-      element.textContent = formatPrice(currentValue);
+      element.textContent = formatPrice(currentValue, currencySymbol);
 
       if (progress < 1) {
         requestAnimationFrame(updateNumber);
       } else {
-        element.textContent = formatPrice(newValue);
+        element.textContent = formatPrice(newValue, currencySymbol);
       }
     }
 
@@ -425,22 +423,20 @@ document.addEventListener('DOMContentLoaded', () => {
         li = document.createElement('li');
         li.className = 'token-item';
         li.setAttribute('data-symbol', token.symbol);
-        // Create initial structure with two alert rows
+        // Create initial structure with two alert rows - using unified dashed box design
         li.innerHTML = `
           <div class="token-info">
             <span class="token-symbol"></span>
             <span class="token-alert">
               <div class="alert-row">
-                <input type="number" class="alert-input alert-input-1" placeholder="" step="any">
-                <span class="alert-display alert-display-1"></span>
+                <span class="alert-display alert-display-1">--</span>
+                <input type="number" class="alert-input alert-input-1" placeholder="Alert" step="any">
                 <span class="alert-percent alert-percent-1"></span>
-                <span class="alert-icon alert-icon-1">🚨</span>
               </div>
               <div class="alert-row">
-                <input type="number" class="alert-input alert-input-2" placeholder="" step="any">
-                <span class="alert-display alert-display-2"></span>
+                <span class="alert-display alert-display-2">--</span>
+                <input type="number" class="alert-input alert-input-2" placeholder="Alert" step="any">
                 <span class="alert-percent alert-percent-2"></span>
-                <span class="alert-icon alert-icon-2">🚨</span>
               </div>
             </span>
           </div>
@@ -449,7 +445,12 @@ document.addEventListener('DOMContentLoaded', () => {
             <span class="price-value"></span>
             <span class="change-percent"></span>
           </div>
-          <button class="delete-btn" aria-label="Remove">❌</button>
+          <button class="delete-btn" aria-label="Remove">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
         `;
 
         // Add Event Listeners for new items
@@ -463,7 +464,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         alertInput1.addEventListener('focus', () => {
           editingTokenSymbol = token.symbol;
-          alertInput1.style.display = 'inline-block';
+          alertInput1.style.display = 'inline-flex';
           alertDisplay1.style.display = 'none';
           adjustInputFontSize(alertInput1);
         });
@@ -490,8 +491,12 @@ document.addEventListener('DOMContentLoaded', () => {
           if (e.key === 'Enter') alertInput1.blur();
         });
 
-        alertDisplay1.addEventListener('click', () => {
-          alertInput1.style.display = 'inline-block';
+        // Click on the entire alert-row to trigger input mode
+        const alertRow1 = li.querySelector('.alert-row:nth-child(1)');
+        alertRow1.addEventListener('click', (e) => {
+          // Don't trigger if clicking on the input itself
+          if (e.target === alertInput1) return;
+          alertInput1.style.display = 'inline-flex';
           alertDisplay1.style.display = 'none';
           alertInput1.focus();
         });
@@ -504,7 +509,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         alertInput2.addEventListener('focus', () => {
           editingTokenSymbol = token.symbol;
-          alertInput2.style.display = 'inline-block';
+          alertInput2.style.display = 'inline-flex';
           alertDisplay2.style.display = 'none';
           adjustInputFontSize(alertInput2);
         });
@@ -531,8 +536,12 @@ document.addEventListener('DOMContentLoaded', () => {
           if (e.key === 'Enter') alertInput2.blur();
         });
 
-        alertDisplay2.addEventListener('click', () => {
-          alertInput2.style.display = 'inline-block';
+        // Click on the entire alert-row to trigger input mode
+        const alertRow2 = li.querySelector('.alert-row:nth-child(2)');
+        alertRow2.addEventListener('click', (e) => {
+          // Don't trigger if clicking on the input itself
+          if (e.target === alertInput2) return;
+          alertInput2.style.display = 'inline-flex';
           alertDisplay2.style.display = 'none';
           alertInput2.focus();
         });
@@ -542,12 +551,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // --- Update Content ---
 
-      // 1. Symbol & Length Class
+      // 1. Symbol & Length Class (with stock name for A-share)
       const symbolSpan = li.querySelector('.token-symbol');
-      if (symbolSpan.textContent !== token.symbol) {
-        symbolSpan.textContent = token.symbol;
+      // Build display text: show stock name with code for A-share (e.g., "贵州茅台[600519]")
+      const displayText = token.stockName
+        ? `${token.stockName}[${token.symbol}]`
+        : token.symbol;
+
+      if (symbolSpan.textContent !== displayText) {
+        symbolSpan.textContent = displayText;
+        // Store original symbol as data attribute for reference
+        symbolSpan.setAttribute('data-symbol', token.symbol);
+
         let lengthClass = 'normal';
-        const len = token.symbol.length;
+        const len = displayText.length;
         if (len > 12) lengthClass = 'extreme';
         else if (len > 9) lengthClass = 'very-long';
         else if (len > 6) lengthClass = 'long';
@@ -568,7 +585,11 @@ document.addEventListener('DOMContentLoaded', () => {
           alertInput1.value = newValue1;
         }
 
-        // Update display with formatted value
+        // Always hide input by default, show display
+        alertInput1.style.display = 'none';
+        alertDisplay1.style.display = 'inline-flex';
+
+        // Update display with formatted value or "--" for empty
         if (token.alertPrice1) {
           const priceStr = token.alertPrice1.toString();
           const digitCount = priceStr.replace('.', '').length;
@@ -580,11 +601,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
           alertDisplay1.textContent = `$${token.alertPrice1}`;
           alertDisplay1.style.fontSize = fontSize;
-          alertDisplay1.style.display = 'inline-block';
-          alertInput1.style.display = 'none';
         } else {
-          alertDisplay1.style.display = 'none';
-          alertInput1.style.display = 'inline-block';
+          alertDisplay1.textContent = '--';
+          alertDisplay1.style.fontSize = '0.6rem';
         }
       }
 
@@ -595,7 +614,11 @@ document.addEventListener('DOMContentLoaded', () => {
           alertInput2.value = newValue2;
         }
 
-        // Update display with formatted value
+        // Always hide input by default, show display
+        alertInput2.style.display = 'none';
+        alertDisplay2.style.display = 'inline-flex';
+
+        // Update display with formatted value or "--" for empty
         if (token.alertPrice2) {
           const priceStr = token.alertPrice2.toString();
           const digitCount = priceStr.replace('.', '').length;
@@ -607,19 +630,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
           alertDisplay2.textContent = `$${token.alertPrice2}`;
           alertDisplay2.style.fontSize = fontSize;
-          alertDisplay2.style.display = 'inline-block';
-          alertInput2.style.display = 'none';
         } else {
-          alertDisplay2.style.display = 'none';
-          alertInput2.style.display = 'inline-block';
+          alertDisplay2.textContent = '--';
+          alertDisplay2.style.fontSize = '0.6rem';
         }
       }
 
-      // 3. Alert Percentage / Icon for first price
+      // 3. Alert Percentage for first price (no more icons)
       const currentPrice = token.lastPrice ? parseFloat(token.lastPrice) : null;
       const alertRow1 = li.querySelector('.alert-row:nth-child(1)');
       let percentSpan1 = alertRow1.querySelector('.alert-percent-1');
-      let iconSpan1 = alertRow1.querySelector('.alert-icon-1');
 
       let percentDiff1 = '';
       let percentClass1 = '';
@@ -630,9 +650,8 @@ document.addEventListener('DOMContentLoaded', () => {
         percentClass1 = diff > 0 ? 'text-green' : 'text-red';
       }
 
+      // Show percentage if alert price exists, otherwise show 🚨 hint
       if (percentDiff1) {
-        if (iconSpan1) iconSpan1.remove();
-
         if (!percentSpan1) {
           percentSpan1 = document.createElement('span');
           percentSpan1.className = 'alert-percent alert-percent-1';
@@ -645,20 +664,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         percentSpan1.style.display = 'inline';
       } else {
-        if (percentSpan1) percentSpan1.style.display = 'none';
-
-        if (!iconSpan1) {
-          iconSpan1 = document.createElement('span');
-          iconSpan1.className = 'alert-icon alert-icon-1';
-          iconSpan1.textContent = '🚨';
-          alertRow1.appendChild(iconSpan1);
+        // No alert price set - show 🚨 as hint
+        if (!percentSpan1) {
+          percentSpan1 = document.createElement('span');
+          percentSpan1.className = 'alert-percent alert-percent-1';
+          alertRow1.appendChild(percentSpan1);
         }
+        percentSpan1.textContent = '🚨';
+        percentSpan1.className = 'alert-percent alert-percent-1';
+        percentSpan1.style.display = 'inline';
       }
 
-      // 4. Alert Percentage / Icon for second price
+      // 4. Alert Percentage for second price (no more icons)
       const alertRow2 = li.querySelector('.alert-row:nth-child(2)');
       let percentSpan2 = alertRow2.querySelector('.alert-percent-2');
-      let iconSpan2 = alertRow2.querySelector('.alert-icon-2');
 
       let percentDiff2 = '';
       let percentClass2 = '';
@@ -669,9 +688,8 @@ document.addEventListener('DOMContentLoaded', () => {
         percentClass2 = diff > 0 ? 'text-green' : 'text-red';
       }
 
+      // Show percentage if alert price exists, otherwise show 🚨 hint
       if (percentDiff2) {
-        if (iconSpan2) iconSpan2.remove();
-
         if (!percentSpan2) {
           percentSpan2 = document.createElement('span');
           percentSpan2.className = 'alert-percent alert-percent-2';
@@ -684,26 +702,29 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         percentSpan2.style.display = 'inline';
       } else {
-        if (percentSpan2) percentSpan2.style.display = 'none';
-
-        if (!iconSpan2) {
-          iconSpan2 = document.createElement('span');
-          iconSpan2.className = 'alert-icon alert-icon-2';
-          iconSpan2.textContent = '🚨';
-          alertRow2.appendChild(iconSpan2);
+        // No alert price set - show 🚨 as hint
+        if (!percentSpan2) {
+          percentSpan2 = document.createElement('span');
+          percentSpan2.className = 'alert-percent alert-percent-2';
+          alertRow2.appendChild(percentSpan2);
         }
+        percentSpan2.textContent = '🚨';
+        percentSpan2.className = 'alert-percent alert-percent-2';
+        percentSpan2.style.display = 'inline';
       }
 
       // 5. Price Display & Animation
       const priceSpan = li.querySelector('.price-value');
-      const priceDisplay = currentPrice ? formatPrice(currentPrice) : 'Loading...';
+      // Determine currency symbol based on API source
+      const currencySymbol = token.apiSource === 'ashare' ? '¥' : '$';
+      const priceDisplay = currentPrice ? formatPrice(currentPrice, currencySymbol) : 'Loading...';
 
       if (currentPrice && priceSpan.textContent !== priceDisplay) {
         const oldPriceText = priceSpan.textContent;
 
-        // Extract old price number
-        const oldPrice = oldPriceText.startsWith('$')
-          ? parseFloat(oldPriceText.replace('$', '').replace(',', ''))
+        // Extract old price number (handle both $ and ¥)
+        const oldPrice = (oldPriceText.startsWith('$') || oldPriceText.startsWith('¥'))
+          ? parseFloat(oldPriceText.replace(/[$¥,]/g, ''))
           : null;
 
         // Animate the number rolling if we have a valid old price
@@ -711,7 +732,7 @@ document.addEventListener('DOMContentLoaded', () => {
           // Add rolling class for visual cue
           priceSpan.classList.add('price-rolling');
 
-          animateNumberChange(priceSpan, oldPrice, currentPrice, 600);
+          animateNumberChange(priceSpan, oldPrice, currentPrice, 600, currencySymbol);
 
           // Remove rolling class after animation
           setTimeout(() => {
