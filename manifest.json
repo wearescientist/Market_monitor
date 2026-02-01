@@ -15,9 +15,11 @@
   },
   "host_permissions": [
     "https://api.binance.com/*",
+    "https://fapi.binance.com/*",
     "https://api.coingecko.com/*",
     "https://pro-api.coinmarketcap.com/*",
-    "https://*/*"
+    "https://qt.gtimg.cn/*",
+    "https://web.ifzq.gtimg.cn/*"
   ],
   "action": {
     "default_icon": {
